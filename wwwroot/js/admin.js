@@ -18,6 +18,7 @@ function adminDiscountDetailClick(e) {
     const form = e.target.closest("form");
     if (!form) throw "adminDiscountDetailClick: Closest form not found";
     const formData = new FormData(form);
+
     fetch("/Shop/DiscountDetailFormReceiver", {
         method: "POST",
         body: formData
@@ -25,7 +26,20 @@ function adminDiscountDetailClick(e) {
         if (typeof j.status != 'undefined' && j.status == 'OK') {
             window.location.reload();
         }
-        else console.log(j);
+        else {
+   
+            console.log("Помилка від сервера:", j); 
+
+            const errorBox = document.getElementById("product-validation-error");
+
+            if (errorBox) {
+                if (j.ProductId && j.ProductId.errors && j.ProductId.errors.length > 0) {
+                    errorBox.innerText = j.ProductId.errors[0].errorMessage;
+                } else {
+                    errorBox.innerText = "Щось пішло не так при додаванні.";
+                }
+            }
+        }
     });
 }
 
