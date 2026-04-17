@@ -25,5 +25,10 @@ namespace AspKnP231.Models.Api
         [JsonPropertyName("authStatus")]
         public String AuthStatus { get; set; } = "UnAuthorized";
 
+        [JsonPropertyName("path")]
+        public String? Path { get; set; }
+
+        [JsonPropertyName("service")]
+        public String Service { get; set; } = "Asp-Shop API";
     }
 }
