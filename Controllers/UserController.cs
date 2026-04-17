@@ -368,6 +368,15 @@ namespace AspKnP231.Controllers
              * та приймати рішення щодо авторизації
              */
         }
+
+        [HttpGet]
+        public IActionResult Logout()
+        {
+            HttpContext.Session.Remove("UserAccess");
+
+
+            return Redirect("/");
+        }
     }
 }
 /* Д.З. Реалізувати стилізацію посилання переходу на 
