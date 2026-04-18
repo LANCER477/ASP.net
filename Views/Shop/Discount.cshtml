@@ -33,27 +33,34 @@
 
     <div class="col">
         <form>
-            <select name="discount-detail-discount-id">
+            <select name="discount-detail-discount-id" class="form-select mb-2">
                 @foreach (var discount in Model.Discounts)
                 {
                     <option value="@discount.Id" title="@discount.Description">@discount.Title</option>
                 }
             </select>
-            <select name="discount-detail-product-id">
+
+            <select name="discount-detail-product-id" class="form-select mb-1">
                 @foreach (var product in Model.Products)
                 {
                     <option value="@product.Id" title="@product.Description">@product.Title</option>
                 }
             </select>
-            <label>Встановити ціну: <input name="discount-detail-price" /></label>
-            <button type="button" id="discount-detail-btn">Додати</button>
+            <div class="text-danger fw-bold mb-2" id="product-validation-error" style="font-size: 0.9em;"></div>
+
+            <label class="mb-2 d-block">Встановити ціну: <input name="discount-detail-price" class="form-control d-inline-block w-auto" /></label>
+            <button type="button" id="discount-detail-btn" class="btn btn-primary">Додати</button>
         </form>
-        @foreach (var dtl in Model.DiscountDetails)
-        {
-            <p>@dtl.Product.Title -- @dtl.Discount.Title</p>
-        }
+
+        <hr />
+
+        <div id="discount-details-list">
+            @foreach (var dtl in Model.DiscountDetails)
+            {
+                @Html.DisplayFor(m => dtl)
+            }
+        </div>
     </div>
-</div>
 
 
 
