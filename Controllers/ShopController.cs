@@ -24,12 +24,107 @@ namespace asp_all.Controllers
 
         public IActionResult Index()
         {
-            ShopIndexViewModel viewModel = new()
+            if (HttpContext.User.Identity?.IsAuthenticated ?? false)
             {
-                ShopSections = [.. _dataAccessor.AllShopSections()]
+                ShopAdminViewModel viewModel = new()
+                {
+                    ShopSections = [.. _dataContext.ShopSections.AsNoTracking()],
+                };
+
+                if (HttpContext.Session.Keys.Contains(nameof(ShopSectionFormModel)))
+                {
+                    viewModel.ShopSectionFormModel = JsonSerializer.Deserialize<ShopSectionFormModel>(
+                        HttpContext.Session.GetString(nameof(ShopSectionFormModel))!
+                    );
+                    ModelStateDictionary modelState = new();
+
+                    JsonElement savedState = JsonSerializer.Deserialize<JsonElement>(
+                        HttpContext.Session.GetString("ShopSectionModelState")!
+                    )!;
+                    foreach (var item in savedState.EnumerateObject())
+                    {
+                        var errors = item.Value.GetProperty("Errors");
+                        if (errors.GetArrayLength() > 0)
+                        {
+                            foreach (var err in errors.EnumerateArray())
+                            {
+                                modelState.AddModelError(item.Name, err.GetProperty("ErrorMessage").GetString()!);
+                            }
+                        }
+                    }
+                    viewModel.ShopSectionModelState = modelState;
+
+                    if (modelState.IsValid)
+                    {
+                        _dataContext.ShopSections.Add(new()
+                        {
+                            Id = Guid.NewGuid(),
+                            Title = viewModel.ShopSectionFormModel!.Title,
+                            Description = viewModel.ShopSectionFormModel.Description,
+                            Slug = viewModel.ShopSectionFormModel.Slug,
+                            ImageUrl = viewModel.ShopSectionFormModel.ImageUrl!,
+                        });
+                        _dataContext.SaveChanges();
+                    }
+
+                    HttpContext.Session.Remove(nameof(ShopSectionFormModel));
+                    HttpContext.Session.Remove("ShopSectionModelState");
+                }
+
+                if (HttpContext.Session.Keys.Contains(nameof(ShopProductFormModel)))
+                {
+                    viewModel.ShopProductFormModel = JsonSerializer.Deserialize<ShopProductFormModel>(
+                        HttpContext.Session.GetString(nameof(ShopProductFormModel))!
+                    );
+                    ModelStateDictionary modelState = new();
+
+                    JsonElement savedState = JsonSerializer.Deserialize<JsonElement>(
+                        HttpContext.Session.GetString("ShopProductModelState")!
+                    )!;
+                    foreach (var item in savedState.EnumerateObject())
+                    {
+                        var errors = item.Value.GetProperty("Errors");
+                        if (errors.GetArrayLength() > 0)
+                        {
+                            foreach (var err in errors.EnumerateArray())
+                            {
+                                modelState.AddModelError(item.Name, err.GetProperty("ErrorMessage").GetString()!);
+                            }
+                        }
+                    }
+                    viewModel.ShopProductModelState = modelState;
+
+                    if (modelState.IsValid)
+                    {
+                        _dataContext.ShopProducts.Add(new()
+                        {
+                            Id = Guid.NewGuid(),
+                            Title = viewModel.ShopProductFormModel!.Title,
+                            Description = viewModel.ShopProductFormModel.Description,
+                            Slug = viewModel.ShopProductFormModel.Slug,
+                            ImageUrl = viewModel.ShopProductFormModel.ImageUrl,
+                            ShopSectionId = viewModel.ShopProductFormModel.SectionId,
+                            Price = (decimal)viewModel.ShopProductFormModel.Price,
+                            Stock = viewModel.ShopProductFormModel.Stock,
+                        });
+                        _dataContext.SaveChanges();
+                    }
+
+                    HttpContext.Session.Remove(nameof(ShopProductFormModel));
+                    HttpContext.Session.Remove("ShopProductModelState");
+                }
+
+                return View("Admin", viewModel);
+            }
+
+            var indexViewModel = new asp_all.Models.Shop.ShopIndexViewModel
+            {
+                ShopSections = [.. _dataContext.ShopSections.AsNoTracking()]
             };
-            return View(viewModel); // <- постійно забиваємо передати модель на представлення
-        }
+
+            return View(indexViewModel);
+        } 
+        
 
         public IActionResult Cart()
         {
@@ -83,7 +178,7 @@ namespace asp_all.Controllers
             {
                 String role = HttpContext.User.Claims
                     .FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? String.Empty;
-                if (role == "Admin")
+                if (role == "Admin" || role == "Root Administrator")
                 {
                     ShopAdminViewModel viewModel = new()
                     {
